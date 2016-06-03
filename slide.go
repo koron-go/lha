@@ -83,13 +83,6 @@ func (sw *sliceWriter) writeCopy(off, size int) (int, error) {
 	return nw, nil
 }
 
-type huffDecoder interface {
-	start()
-	decodeC() (uint16, error)
-	decodeP() (uint16, error)
-	end()
-}
-
 func slideDecode(hd huffDecoder, w io.Writer, bits, adjust uint, size int) (crc16, error) {
 	sw := newSliceWriter(w, bits)
 	hd.start()
