@@ -2,13 +2,6 @@ package lha
 
 import "io"
 
-type huffDecoder interface {
-	start()
-	decodeC() (uint16, error)
-	decodeP() (uint16, error)
-	end()
-}
-
 type sliceWriter struct {
 	wr  io.Writer
 	cnt int
@@ -28,13 +21,22 @@ func newSliceWriter(w io.Writer, bits uint) *sliceWriter {
 	}
 }
 
+func (sw *sliceWriter) Write(p []byte) (int, error) {
+	for i, b := range p {
+		if err := sw.WriteByte(b); err != nil {
+			return i, err
+		}
+	}
+	return len(p), nil
+}
+
 func (sw *sliceWriter) WriteByte(b byte) error {
 	sw.buf[sw.loc] = b
 	sw.loc++
 	if sw.loc == len(sw.buf) {
 		err := sw.Flush()
 		if err != nil {
-			return nil
+			return err
 		}
 	}
 	sw.cnt++
@@ -54,9 +56,38 @@ func (sw *sliceWriter) Flush() error {
 	return nil
 }
 
-func (sw *sliceWriter) WriteCopy(off, size int) (int, error) {
-	// TODO:
-	return 0, nil
+func (sw *sliceWriter) writeCopy(off, size int) (int, error) {
+	var (
+		st = (sw.loc - off - 1 + len(sw.buf)) % len(sw.buf)
+		r  = len(sw.buf) - st
+		nw = 0
+	)
+	for size > 0 {
+		if size <= r {
+			n, err := sw.Write(sw.buf[st : st+size])
+			nw += n
+			return nw, err
+		}
+		n, err := sw.Write(sw.buf[st : st+r])
+		nw += n
+		if err != nil {
+			return nw, err
+		}
+		size -= n
+		st = 0
+		r = len(sw.buf)
+		if size < r {
+			r = size
+		}
+	}
+	return nw, nil
+}
+
+type huffDecoder interface {
+	start()
+	decodeC() (uint16, error)
+	decodeP() (uint16, error)
+	end()
 }
 
 func slideDecode(hd huffDecoder, w io.Writer, bits, adjust uint, size int) (crc16, error) {
@@ -79,7 +110,7 @@ func slideDecode(hd huffDecoder, w io.Writer, bits, adjust uint, size int) (crc1
 		if err != nil {
 			return 0, nil
 		}
-		if _, err := sw.WriteCopy(int(off), int(uint(c)-adjust)); err != nil {
+		if _, err := sw.writeCopy(int(off), int(uint(c)-adjust)); err != nil {
 			return 0, nil
 		}
 	}
