@@ -51,7 +51,7 @@ func (sw *sliceWriter) Flush() error {
 	if err != nil {
 		return err
 	}
-	sw.crc = sw.crc.update(sw.buf[:sw.loc])
+	sw.crc = sw.crc.updateBytes(sw.buf[:sw.loc])
 	sw.loc = 0
 	return nil
 }

@@ -2,10 +2,16 @@ package lha
 
 import (
 	"bufio"
+	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"time"
+)
+
+var (
+	errTooShortExtendedHeader = errors.New("too short extended header")
 )
 
 // Reader is LHA archive reader.
@@ -13,6 +19,8 @@ type Reader struct {
 	raw io.Reader
 	br  *bufio.Reader
 	err error
+	cnt int
+	crc crc16
 }
 
 // NewReader creates LHA archive reader.
@@ -68,15 +76,20 @@ func (r *Reader) readHeaderLv2() (*Header, error) {
 	h := new(Header)
 	h.Size, _ = r.readUint16()
 	h.Method, _ = r.readStringN(5)
-	h.PackedSize, _ = r.readUint32()
-	h.OriginalSize, _ = r.readUint32()
+	packedSize, _ := r.readUint32()
+	h.PackedSize = uint64(packedSize)
+	originalSize, _ := r.readUint32()
+	h.OriginalSize = uint64(originalSize)
 	h.Time, _ = r.readTime()
 	h.Attribute, _ = r.readUint8()
 	h.Level, _ = r.readUint8()
 	*(*uint16)(&h.CRC), _ = r.readUint16()
 	h.OSID, _ = r.readUint8()
-	h.NextSize, _ = r.readUint16()
-	// TODO: read other fields.
+	nextSize, _ := r.readUint16()
+	readAllExtendedHeaders(r, h, nextSize)
+	if remain := int(h.Size) - r.cnt; remain > 0 {
+		r.skip(remain)
+	}
 	if r.err != nil {
 		return nil, r.err
 	}
@@ -93,11 +106,14 @@ func (r *Reader) skip(n int) (int, error) {
 	if r.err != nil {
 		return 0, r.err
 	}
-	n, r.err = r.br.Discard(n)
+	var d []byte
+	d, r.err = r.readBytes(n)
 	if r.err != nil {
-		return n, r.err
+		return 0, r.err
 	}
-	return n, nil
+	r.cnt += len(d)
+	r.crc = r.crc.updateBytes(d)
+	return len(d), nil
 }
 
 func (r *Reader) readBytes(n int) ([]byte, error) {
@@ -109,6 +125,8 @@ func (r *Reader) readBytes(n int) ([]byte, error) {
 	if r.err != nil {
 		return nil, r.err
 	}
+	r.cnt += len(d)
+	r.crc = r.crc.updateBytes(d)
 	return d, nil
 }
 
@@ -129,6 +147,8 @@ func (r *Reader) readUint8() (uint8, error) {
 		r.err = err
 		return 0, r.err
 	}
+	r.cnt += 1
+	r.crc = r.crc.updateByte(b0)
 	return uint8(b0), nil
 }
 
@@ -142,6 +162,8 @@ func (r *Reader) readUint16() (uint16, error) {
 		r.err = err
 		return 0, r.err
 	}
+	r.cnt += 2
+	r.crc = r.crc.update(b0, b1)
 	return uint16(b1)<<8 + uint16(b0), nil
 }
 
@@ -159,7 +181,22 @@ func (r *Reader) readUint32() (uint32, error) {
 	if r.err != nil {
 		return 0, r.err
 	}
+	r.cnt += 4
+	r.crc = r.crc.update(b0, b1, b2, b3)
 	return uint32(b3)<<24 + uint32(b2)<<16 + uint32(b1)<<8 + uint32(b0), nil
+}
+
+func (r *Reader) readUint64() (uint64, error) {
+	if r.err != nil {
+		return 0, r.err
+	}
+	d, err := r.readBytes(8)
+	if err != nil {
+		return 0, err
+	}
+	r.cnt += len(d)
+	r.crc = r.crc.updateBytes(d)
+	return binary.LittleEndian.Uint64(d), nil
 }
 
 func (r *Reader) readTime() (time.Time, error) {

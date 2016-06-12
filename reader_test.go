@@ -18,4 +18,5 @@ func TestDQ(t *testing.T) {
 		t.Fatal(err)
 	}
 	log.Printf("%+v", h)
+	log.Printf("Header CRC: %s", r.crc)
 }

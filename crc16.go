@@ -8,11 +8,15 @@ func (c crc16) updateByte(b byte) crc16 {
 	return crcTable[(c^crc16(b))&0xff] ^ (c >> 8)
 }
 
-func (c crc16) update(d []byte) crc16 {
+func (c crc16) updateBytes(d []byte) crc16 {
 	for _, b := range d {
 		c = c.updateByte(b)
 	}
 	return c
+}
+
+func (c crc16) update(d ...byte) crc16 {
+	return c.updateBytes(d[:])
 }
 
 func (c crc16) String() string {
