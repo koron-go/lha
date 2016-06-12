@@ -44,7 +44,8 @@ func readHeaderLv2(r *Reader) (*Header, error) {
 	h.OSID, _ = r.readUint8()
 	nextSize, _ := r.readUint16()
 	readAllExtendedHeaders(r, h, nextSize)
-	if remain := int(h.Size) - r.cnt; remain > 0 {
+	// FIXME: consider 64bit length.
+	if remain := int(h.Size) - int(r.cnt); remain > 0 {
 		r.skip(remain)
 	}
 	if r.err != nil {

@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+const (
+	commonHeaderSize = 21
+)
+
 var (
 	errTooShortExtendedHeader = errors.New("too short extended header")
 	errHeaderCRCMismatch      = errors.New("header CRC mismatch")
@@ -19,8 +23,10 @@ type Reader struct {
 	raw io.Reader
 	br  *bufio.Reader
 	err error
-	cnt int
+	cnt uint64
 	crc crc16
+
+	curr *Header
 }
 
 // NewReader creates LHA archive reader.
@@ -36,23 +42,25 @@ func (r *Reader) CRC16() uint16 {
 	return uint16(r.crc)
 }
 
-// ReadHeader reads a hedader entry.
-func (r *Reader) ReadHeader() (h *Header, err error) {
-	const commonHeaderSize = 21
-	b, err := r.br.Peek(1)
-	if err != nil && err != io.EOF {
+// NextHeader reads a next file header.
+func (r *Reader) NextHeader() (h *Header, err error) {
+	if r.err != nil {
+		return nil, r.err
+	}
+	if err := r.seekNext(); err != nil {
 		return nil, err
-	} else if err == io.EOF || b[0] == 0 {
+	}
+	lv, err := r.peekHeaderLevel()
+	if err == io.EOF {
 		return nil, nil
-	}
-	d, err := r.br.Peek(commonHeaderSize)
-	if err != nil {
+	} else if err != nil {
 		return nil, err
 	}
-	proc, ok := headerReaders[d[20]]
+	proc, ok := headerReaders[lv]
 	if !ok {
-		return nil, fmt.Errorf("unknown level header: %d", d[20])
+		return nil, fmt.Errorf("unknown header level: %d", lv)
 	}
+	r.cnt = 0
 	r.crc = 0
 	h, err = proc(r)
 	if err != nil {
@@ -61,12 +69,43 @@ func (r *Reader) ReadHeader() (h *Header, err error) {
 	if h.HeaderCRC != nil && *h.HeaderCRC != r.crc {
 		return nil, errHeaderCRCMismatch
 	}
+	r.cnt = 0
+	r.curr = new(Header)
+	*r.curr = *h
 	return h, nil
 }
 
-// Discard skips the next n bytes.
-func (r *Reader) Discard(n int) (discarded int, err error) {
-	return r.br.Discard(n)
+func (r *Reader) seekNext() error {
+	if r.curr != nil && r.curr.PackedSize > r.cnt {
+		remain := r.curr.PackedSize - r.cnt
+		r.curr = nil
+		// FIXME: consider 64bit length.
+		_, r.err = r.br.Discard(int(remain))
+		if r.err != nil {
+			return r.err
+		}
+	}
+	return nil
+}
+
+func (r *Reader) peekHeaderLevel() (lv byte, err error) {
+	if r.err != nil {
+		return 0, r.err
+	}
+	var d []byte
+	d, r.err = r.br.Peek(1)
+	if r.err != nil {
+		return 0, r.err
+	}
+	if d[0] == 0 {
+		r.err = io.EOF
+		return 0, io.EOF
+	}
+	d, r.err = r.br.Peek(commonHeaderSize)
+	if r.err != nil {
+		return 0, r.err
+	}
+	return d[20], nil
 }
 
 func (r *Reader) skip(n int) (int, error) {
@@ -90,7 +129,7 @@ func (r *Reader) readBytes(n int) ([]byte, error) {
 	if r.err != nil {
 		return nil, r.err
 	}
-	r.cnt += len(d)
+	r.cnt += uint64(len(d))
 	r.crc = r.crc.updateBytes(d)
 	return d, nil
 }
@@ -174,7 +213,7 @@ func (r *Reader) readUint64() (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	r.cnt += len(d)
+	r.cnt += uint64(len(d))
 	r.crc = r.crc.updateBytes(d)
 	return binary.LittleEndian.Uint64(d), nil
 }
@@ -189,4 +228,10 @@ func (r *Reader) readTime() (time.Time, error) {
 		return time.Time{}, r.err
 	}
 	return time.Unix(int64(n), 0), nil
+}
+
+// Decode decode a file to w.  It returns decoded size and error.
+func (r *Reader) Decode(w io.Writer) (decoded int, err error) {
+	// TODO:
+	return 0, nil
 }

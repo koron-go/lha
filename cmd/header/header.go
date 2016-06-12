@@ -19,7 +19,7 @@ func main() {
 	defer f.Close()
 	r := lha.NewReader(f)
 	for {
-		h, err := r.ReadHeader()
+		h, err := r.NextHeader()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -27,8 +27,5 @@ func main() {
 			break
 		}
 		fmt.Printf("%+v\n", h)
-		if _, err := r.Discard(int(h.PackedSize)); err != nil {
-			log.Fatal(err)
-		}
 	}
 }
