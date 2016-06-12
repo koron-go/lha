@@ -82,33 +82,3 @@ func (sw *sliceWriter) writeCopy(off, size int) (int, error) {
 	}
 	return nw, nil
 }
-
-func slideDecode(hd huffDecoder, w io.Writer, bits, adjust uint, size int) (crc16, error) {
-	sw := newSliceWriter(w, bits)
-	hd.start()
-	defer hd.end()
-	for sw.cnt < size {
-		c, err := hd.decodeC()
-		if err != nil {
-			return 0, err
-		}
-		if c < 256 {
-			err := sw.WriteByte(byte(c))
-			if err != nil {
-				return 0, err
-			}
-			continue
-		}
-		off, err := hd.decodeP()
-		if err != nil {
-			return 0, nil
-		}
-		if _, err := sw.writeCopy(int(off), int(uint(c)-adjust)); err != nil {
-			return 0, nil
-		}
-	}
-	if err := sw.Flush(); err != nil {
-		return 0, nil
-	}
-	return sw.crc, nil
-}

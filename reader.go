@@ -16,6 +16,7 @@ const (
 var (
 	errTooShortExtendedHeader = errors.New("too short extended header")
 	errHeaderCRCMismatch      = errors.New("header CRC mismatch")
+	errBodyCRCMismatch        = errors.New("body CRC mismatch")
 )
 
 // Reader is LHA archive reader.
@@ -232,6 +233,17 @@ func (r *Reader) readTime() (time.Time, error) {
 
 // Decode decode a file to w.  It returns decoded size and error.
 func (r *Reader) Decode(w io.Writer) (decoded int, err error) {
-	// TODO:
-	return 0, nil
+	m, err := getMethod(r.curr.Method)
+	if err != nil {
+		return 0, err
+	}
+	crc, err := m.decoder.decode(r, w, m.dictBits, m.adjust, int(r.curr.OriginalSize))
+	// TODO: return correct decoded length.
+	if err != nil {
+		return 0, err
+	}
+	if crc != r.curr.CRC {
+		return 0, errBodyCRCMismatch
+	}
+	return int(r.curr.OriginalSize), nil
 }
