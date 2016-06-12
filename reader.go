@@ -53,6 +53,7 @@ func (r *Reader) ReadHeader() (h *Header, err error) {
 	if !ok {
 		return nil, fmt.Errorf("unknown level header: %d", d[20])
 	}
+	r.crc = 0
 	h, err = proc(r)
 	if err != nil {
 		return nil, err
@@ -61,6 +62,11 @@ func (r *Reader) ReadHeader() (h *Header, err error) {
 		return nil, errHeaderCRCMismatch
 	}
 	return h, nil
+}
+
+// Discard skips the next n bytes.
+func (r *Reader) Discard(n int) (discarded int, err error) {
+	return r.br.Discard(n)
 }
 
 func (r *Reader) skip(n int) (int, error) {

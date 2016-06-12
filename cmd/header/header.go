@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
+
 	"github.com/koron/go-lha"
 )
 
@@ -16,10 +18,17 @@ func main() {
 	}
 	defer f.Close()
 	r := lha.NewReader(f)
-	h, err := r.ReadHeader()
-	if err != nil {
-		log.Fatal(err)
+	for {
+		h, err := r.ReadHeader()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if h == nil {
+			break
+		}
+		fmt.Printf("%+v\n", h)
+		if _, err := r.Discard(int(h.PackedSize)); err != nil {
+			log.Fatal(err)
+		}
 	}
-	log.Printf("%+v", h)
-	log.Printf("Header CRC: %04x", r.CRC16())
 }
