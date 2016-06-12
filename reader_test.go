@@ -13,10 +13,10 @@ func TestDQ(t *testing.T) {
 	}
 	defer f.Close()
 	r := NewReader(f)
-	h, err := r.readHeader()
+	h, err := r.ReadHeader()
 	if err != nil {
 		t.Fatal(err)
 	}
 	log.Printf("%+v", h)
-	log.Printf("Header CRC: %s", r.crc)
+	log.Printf("Header CRC: %04x", r.CRC16())
 }

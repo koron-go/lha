@@ -31,7 +31,13 @@ func NewReader(r io.Reader) *Reader {
 	}
 }
 
-func (r *Reader) readHeader() (*Header, error) {
+// CRC16 returns current CRC16 value.
+func (r *Reader) CRC16() uint16 {
+	return uint16(r.crc)
+}
+
+// ReadHeader reads a hedader entry.
+func (r *Reader) ReadHeader() (*Header, error) {
 	const commonHeaderSize = 21
 	b, err := r.br.Peek(1)
 	if err != nil && err != io.EOF {
@@ -147,7 +153,7 @@ func (r *Reader) readUint8() (uint8, error) {
 		r.err = err
 		return 0, r.err
 	}
-	r.cnt += 1
+	r.cnt++
 	r.crc = r.crc.updateByte(b0)
 	return uint8(b0), nil
 }
@@ -164,6 +170,21 @@ func (r *Reader) readUint16() (uint16, error) {
 	}
 	r.cnt += 2
 	r.crc = r.crc.update(b0, b1)
+	return uint16(b1)<<8 + uint16(b0), nil
+}
+
+func (r *Reader) readUint16NoCRC() (uint16, error) {
+	if r.err != nil {
+		return 0, r.err
+	}
+	b0, _ := r.br.ReadByte()
+	b1, err := r.br.ReadByte()
+	if err != nil {
+		r.err = err
+		return 0, r.err
+	}
+	r.cnt += 2
+	r.crc = r.crc.update(0, 0)
 	return uint16(b1)<<8 + uint16(b0), nil
 }
 

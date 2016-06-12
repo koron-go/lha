@@ -55,7 +55,7 @@ func readExtendedHeader(r *Reader, h *Header, size uint16) (uint16, error) {
 }
 
 func readHeaderCRC(r *Reader, h *Header, size int) (remain int, err error) {
-	*(*uint16)(&h.HeaderCRC), err = r.readUint16()
+	*(*uint16)(&h.HeaderCRC), err = r.readUint16NoCRC()
 	return remain - 2, err
 }
 
