@@ -1,5 +1,7 @@
 package lha
 
+import "strconv"
+
 type crc16 uint16
 
 func (c crc16) updateByte(b byte) crc16 {
@@ -11,6 +13,10 @@ func (c crc16) update(d []byte) crc16 {
 		c = c.updateByte(b)
 	}
 	return c
+}
+
+func (c crc16) String() string {
+	return strconv.FormatUint(uint64(c), 16)
 }
 
 const crcPoly = crc16(0xA001)

@@ -1,6 +1,7 @@
 package lha
 
 import (
+	"log"
 	"os"
 	"testing"
 )
@@ -12,7 +13,9 @@ func TestDQ(t *testing.T) {
 	}
 	defer f.Close()
 	r := NewReader(f)
-	if _, err := r.readHeader(); err != nil{
+	h, err := r.readHeader()
+	if err != nil {
 		t.Fatal(err)
 	}
+	log.Printf("%+v", h)
 }
