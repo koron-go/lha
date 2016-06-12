@@ -1,6 +1,63 @@
 package lha
 
-import "os"
+import (
+	"log"
+	"os"
+)
+
+type headerReader func(r *Reader) (*Header, error)
+
+var headerReaders = map[byte]headerReader{
+	0: readHeaderLv0,
+	1: readHeaderLv1,
+	2: readHeaderLv2,
+	3: readHeaderLv3,
+}
+
+func readHeaderLv0(r *Reader) (*Header, error) {
+	log.Println("readHeader:", 0)
+	// TODO:
+	return nil, nil
+}
+
+func readHeaderLv1(r *Reader) (*Header, error) {
+	log.Println("readHeader:", 1)
+	// TODO:
+	return nil, nil
+}
+
+func readHeaderLv2(r *Reader) (*Header, error) {
+	if r.err != nil {
+		return nil, r.err
+	}
+	h := new(Header)
+	h.Size, _ = r.readUint16()
+	h.Method, _ = r.readStringN(5)
+	packedSize, _ := r.readUint32()
+	h.PackedSize = uint64(packedSize)
+	originalSize, _ := r.readUint32()
+	h.OriginalSize = uint64(originalSize)
+	h.Time, _ = r.readTime()
+	h.Attribute, _ = r.readUint8()
+	h.Level, _ = r.readUint8()
+	*(*uint16)(&h.CRC), _ = r.readUint16()
+	h.OSID, _ = r.readUint8()
+	nextSize, _ := r.readUint16()
+	readAllExtendedHeaders(r, h, nextSize)
+	if remain := int(h.Size) - r.cnt; remain > 0 {
+		r.skip(remain)
+	}
+	if r.err != nil {
+		return nil, r.err
+	}
+	return h, nil
+}
+
+func readHeaderLv3(r *Reader) (*Header, error) {
+	log.Println("readHeader:", 3)
+	// TODO:
+	return nil, nil
+}
 
 type exHeaderReader func(r *Reader, h *Header, size int) (remain int, err error)
 
@@ -55,7 +112,11 @@ func readExtendedHeader(r *Reader, h *Header, size uint16) (uint16, error) {
 }
 
 func readHeaderCRC(r *Reader, h *Header, size int) (remain int, err error) {
-	*(*uint16)(&h.HeaderCRC), err = r.readUint16NoCRC()
+	var crc crc16
+	*(*uint16)(&crc), err = r.readUint16NoCRC()
+	if err == nil {
+		h.HeaderCRC = &crc
+	}
 	return remain - 2, err
 }
 
@@ -81,7 +142,7 @@ func readDOSAttr(r *Reader, h *Header, size int) (remain int, err error) {
 }
 
 func readWinTime(r *Reader, h *Header, size int) (remain int, err error) {
-	// TODO: parse Windows time.
+	// FIXME: parse Windows time.
 	return size, r.err
 }
 

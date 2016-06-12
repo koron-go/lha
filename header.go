@@ -14,7 +14,7 @@ type Header struct {
 	CRC          crc16
 	OSID         uint8
 
-	HeaderCRC crc16
+	HeaderCRC *crc16
 	Name      string
 	Dir       string
 	DOS       struct {

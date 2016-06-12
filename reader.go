@@ -6,12 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"time"
 )
 
 var (
 	errTooShortExtendedHeader = errors.New("too short extended header")
+	errHeaderCRCMismatch      = errors.New("header CRC mismatch")
 )
 
 // Reader is LHA archive reader.
@@ -37,7 +37,7 @@ func (r *Reader) CRC16() uint16 {
 }
 
 // ReadHeader reads a hedader entry.
-func (r *Reader) ReadHeader() (*Header, error) {
+func (r *Reader) ReadHeader() (h *Header, err error) {
 	const commonHeaderSize = 21
 	b, err := r.br.Peek(1)
 	if err != nil && err != io.EOF {
@@ -49,63 +49,18 @@ func (r *Reader) ReadHeader() (*Header, error) {
 	if err != nil {
 		return nil, err
 	}
-	switch lv := d[20]; lv {
-	case 0:
-		return r.readHeaderLv0()
-	case 1:
-		return r.readHeaderLv1()
-	case 2:
-		return r.readHeaderLv2()
-	case 3:
-		return r.readHeaderLv3()
-	default:
-		return nil, fmt.Errorf("unknown level header: %d", lv)
+	proc, ok := headerReaders[d[20]]
+	if !ok {
+		return nil, fmt.Errorf("unknown level header: %d", d[20])
 	}
-}
-
-func (r *Reader) readHeaderLv0() (*Header, error) {
-	log.Println("readHeader:", 0)
-	// TODO:
-	return nil, nil
-}
-
-func (r *Reader) readHeaderLv1() (*Header, error) {
-	log.Println("readHeader:", 1)
-	// TODO:
-	return nil, nil
-}
-
-func (r *Reader) readHeaderLv2() (*Header, error) {
-	if r.err != nil {
-		return nil, r.err
+	h, err = proc(r)
+	if err != nil {
+		return nil, err
 	}
-	h := new(Header)
-	h.Size, _ = r.readUint16()
-	h.Method, _ = r.readStringN(5)
-	packedSize, _ := r.readUint32()
-	h.PackedSize = uint64(packedSize)
-	originalSize, _ := r.readUint32()
-	h.OriginalSize = uint64(originalSize)
-	h.Time, _ = r.readTime()
-	h.Attribute, _ = r.readUint8()
-	h.Level, _ = r.readUint8()
-	*(*uint16)(&h.CRC), _ = r.readUint16()
-	h.OSID, _ = r.readUint8()
-	nextSize, _ := r.readUint16()
-	readAllExtendedHeaders(r, h, nextSize)
-	if remain := int(h.Size) - r.cnt; remain > 0 {
-		r.skip(remain)
-	}
-	if r.err != nil {
-		return nil, r.err
+	if h.HeaderCRC != nil && *h.HeaderCRC != r.crc {
+		return nil, errHeaderCRCMismatch
 	}
 	return h, nil
-}
-
-func (r *Reader) readHeaderLv3() (*Header, error) {
-	log.Println("readHeader:", 3)
-	// TODO:
-	return nil, nil
 }
 
 func (r *Reader) skip(n int) (int, error) {
@@ -117,8 +72,6 @@ func (r *Reader) skip(n int) (int, error) {
 	if r.err != nil {
 		return 0, r.err
 	}
-	r.cnt += len(d)
-	r.crc = r.crc.updateBytes(d)
 	return len(d), nil
 }
 
