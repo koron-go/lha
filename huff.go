@@ -9,7 +9,7 @@ type huffDecoder struct {
 }
 
 func (hd huffDecoder) decode(r *Reader, w io.Writer, bits, adjust uint, size int) (crc16, error) {
-	sw := newSliceWriter(w, bits)
+	sw := newSlideWriter(w, bits)
 	hd.start(r)
 	for sw.cnt < size {
 		c, err := hd.decodeC(r)
@@ -27,7 +27,7 @@ func (hd huffDecoder) decode(r *Reader, w io.Writer, bits, adjust uint, size int
 		if err != nil {
 			return 0, nil
 		}
-		if _, err := sw.writeCopy(int(off), int(uint(c)-adjust)); err != nil {
+		if _, err := sw.WriteCopy(int(off), int(uint(c)-adjust)); err != nil {
 			return 0, nil
 		}
 	}

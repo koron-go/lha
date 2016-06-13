@@ -2,7 +2,7 @@ package lha
 
 import "io"
 
-type sliceWriter struct {
+type slideWriter struct {
 	wr  io.Writer
 	cnt int
 	crc crc16
@@ -10,18 +10,18 @@ type sliceWriter struct {
 	loc int
 }
 
-func newSliceWriter(w io.Writer, bits uint) *sliceWriter {
+func newSlideWriter(w io.Writer, bits uint) *slideWriter {
 	buf := make([]byte, 1<<bits)
 	for i := range buf {
 		buf[i] = ' '
 	}
-	return &sliceWriter{
+	return &slideWriter{
 		wr:  w,
 		buf: buf,
 	}
 }
 
-func (sw *sliceWriter) Write(p []byte) (int, error) {
+func (sw *slideWriter) Write(p []byte) (int, error) {
 	for i, b := range p {
 		if err := sw.WriteByte(b); err != nil {
 			return i, err
@@ -30,7 +30,7 @@ func (sw *sliceWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func (sw *sliceWriter) WriteByte(b byte) error {
+func (sw *slideWriter) WriteByte(b byte) error {
 	sw.buf[sw.loc] = b
 	sw.loc++
 	if sw.loc == len(sw.buf) {
@@ -43,7 +43,7 @@ func (sw *sliceWriter) WriteByte(b byte) error {
 	return nil
 }
 
-func (sw *sliceWriter) Flush() error {
+func (sw *slideWriter) Flush() error {
 	if sw.loc == 0 {
 		return nil
 	}
@@ -56,7 +56,7 @@ func (sw *sliceWriter) Flush() error {
 	return nil
 }
 
-func (sw *sliceWriter) writeCopy(off, size int) (int, error) {
+func (sw *slideWriter) WriteCopy(off, size int) (int, error) {
 	var (
 		st = (sw.loc - off - 1 + len(sw.buf)) % len(sw.buf)
 		r  = len(sw.buf) - st
