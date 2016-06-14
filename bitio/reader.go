@@ -17,6 +17,12 @@ func NewReader(rd io.Reader) *Reader {
 	}
 }
 
+// NBits returns number of available bits without accessing underlying
+// io.Reader.
+func (r*Reader) NBits() uint {
+	return r.curr.n + r.ahead.n
+}
+
 // ReadBits reads bits up to 64.
 func (r *Reader) ReadBits(n uint) (uint64, error) {
 	if n > 64 {
@@ -73,25 +79,23 @@ func (r *Reader) readBits(n uint) (uint64, error) {
 
 // loadBits loads at least n bits.
 func (r *Reader) loadBits(nbits uint) error {
-	if nbits -= r.loadAhead(nbits); nbits == 0 {
-		return nil
-	}
-	nbytes := int((nbits + 7) / 8)
-	if nbytes > 8 {
+	if nbits > 64 {
 		return ErrTooMuchBits
 	}
 	for {
-		n, err := r.rd.Read(r.buf[:nbytes])
-		if n > 0 {
-			r.ahead.set(r.buf[:n])
-			nbytes -= n
-		}
 		if nbits -= r.loadAhead(nbits); nbits == 0 {
 			return nil
 		}
-		if err == io.EOF {
-			return ErrTooLessBits
-		} else if err != nil {
+		nbytes := int((nbits + 7) / 8)
+		n, err := r.rd.Read(r.buf[:nbytes])
+		if n > 0 {
+			r.ahead.set(r.buf[:n])
+			continue
+		}
+		if err != nil {
+			if err == io.EOF {
+				err = ErrTooLessBits
+			}
 			return err
 		}
 	}
