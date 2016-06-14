@@ -16,7 +16,7 @@ type bits struct {
 }
 
 func (b *bits) read(nbits uint) (uint64, error) {
-	if nbits > b.n {
+	if nbits > 64 || nbits > b.n {
 		return 0, ErrTooMuchBits
 	}
 	d := b.v >> (64 - nbits)
@@ -26,7 +26,7 @@ func (b *bits) read(nbits uint) (uint64, error) {
 }
 
 func (b *bits) write(d uint64, nbits uint) error {
-	if nbits > 64-b.n {
+	if nbits+b.n > 64 {
 		return ErrTooMuchBits
 	}
 	b.v += d << (64 - b.n - nbits)
