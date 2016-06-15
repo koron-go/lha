@@ -15,10 +15,10 @@ type readBits struct {
 func TestReaderReadBits(t *testing.T) {
 	f := func(t *testing.T, d []byte, p []readBits) *Reader {
 		r := NewReader(bytes.NewReader(d))
-		for _, q := range p {
+		for i, q := range p {
 			val, err := r.ReadBits(q.nbits)
-			assertEquals(t, val, q.rval, "Reader.ReadBits() returned value")
-			assertEquals(t, err, q.rerr, "Reader.ReadBits() returned error")
+			assertEquals(t, val, q.rval, "Reader.ReadBits() returned value for #%d", i)
+			assertEquals(t, err, q.rerr, "Reader.ReadBits() returned error for #%d", i)
 		}
 		return r
 	}
@@ -34,5 +34,16 @@ func TestReaderReadBits(t *testing.T) {
 	f(t, []byte{0, 0, 0, 0, 0, 0, 0, 0}, []readBits{
 		{63, 0, nil},
 		{2, 0, ErrTooLessBits},
+	})
+	// 1101 0010 0010 0000
+	f(t, []byte{0xD2, 0x20}, []readBits{
+		{1, 1, nil},
+		{2, 2, nil},
+		{3, 4, nil},
+		{4, 8, nil},
+		{5, 16, nil},
+		{2, 0, ErrTooLessBits},
+		{1, 0, nil},
+		{1, 0, io.EOF},
 	})
 }
