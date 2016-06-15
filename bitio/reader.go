@@ -19,7 +19,7 @@ func NewReader(rd io.Reader) *Reader {
 
 // NBits returns number of available bits without accessing underlying
 // io.Reader.
-func (r*Reader) NBits() uint {
+func (r *Reader) NBits() uint {
 	return r.curr.n + r.ahead.n
 }
 
@@ -93,7 +93,7 @@ func (r *Reader) loadBits(nbits uint) error {
 			continue
 		}
 		if err != nil {
-			if err == io.EOF {
+			if err == io.EOF && r.curr.n+r.ahead.n != 0 {
 				err = ErrTooLessBits
 			}
 			return err
