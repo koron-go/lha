@@ -35,6 +35,9 @@ func (b *bits) write(d uint64, nbits uint) error {
 }
 
 func (b *bits) set(p []byte) {
+	if len(p) > 8 {
+		return
+	}
 	b.v = 0
 	b.n = uint(len(p)) * 8
 	for i, v := range p {

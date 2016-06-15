@@ -38,6 +38,14 @@ func TestBitWrite(t *testing.T) {
 	f(bits{}, 0xff, 16, nil, bits{v: 0xff << 48, n: 16})
 	f(bits{}, 0xff, 24, nil, bits{v: 0xff << 40, n: 24})
 	f(bits{}, 0xff, 32, nil, bits{v: 0xff << 32, n: 32})
-	f(bits{}, 0xff, 64, nil, bits{v: 0xff , n: 64})
+	f(bits{}, 0xff, 64, nil, bits{v: 0xff, n: 64})
 	f(bits{}, 0xff, 65, ErrTooMuchBits, bits{})
+}
+
+func TestBitSet(t *testing.T) {
+	f := func(before bits, p []byte, after bits) {
+		before.set(p)
+		assertEquals(t, before, after, "bits after bits.set()")
+	}
+	f(bits{}, []byte{0xff}, bits{v: 0xff << 56, n: 8})
 }
