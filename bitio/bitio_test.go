@@ -27,3 +27,17 @@ func TestBitsRead(t *testing.T) {
 	f(bits{}, 1, 0, ErrTooMuchBits, bits{})
 	f(bits{v: 1 << 63, n: 1}, 2, 0, ErrTooMuchBits, bits{v: 1 << 63, n: 1})
 }
+
+func TestBitWrite(t *testing.T) {
+	f := func(before bits, d uint64, nbits uint, rerr error, after bits) {
+		err := before.write(d, nbits)
+		assertEquals(t, err, rerr, "bits.write() returned error")
+		assertEquals(t, before, after, "bits after bits.write()")
+	}
+	f(bits{}, 0xff, 8, nil, bits{v: 0xff << 56, n: 8})
+	f(bits{}, 0xff, 16, nil, bits{v: 0xff << 48, n: 16})
+	f(bits{}, 0xff, 24, nil, bits{v: 0xff << 40, n: 24})
+	f(bits{}, 0xff, 32, nil, bits{v: 0xff << 32, n: 32})
+	f(bits{}, 0xff, 64, nil, bits{v: 0xff , n: 64})
+	f(bits{}, 0xff, 65, ErrTooMuchBits, bits{})
+}
