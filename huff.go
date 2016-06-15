@@ -1,6 +1,10 @@
 package lha
 
-import "io"
+import (
+	"io"
+
+	"github.com/koron/go-lha/slide"
+)
 
 type huffDecoder struct {
 	start   func(r *Reader)
@@ -8,10 +12,10 @@ type huffDecoder struct {
 	decodeP func(r *Reader) (uint16, error)
 }
 
-func (hd huffDecoder) decode(r *Reader, w io.Writer, bits, adjust uint, size int) (crc16, error) {
-	sw := newSlideWriter(w, bits)
+func (hd huffDecoder) decode(r *Reader, w io.Writer, bits, adjust uint, size int) (crc uint16, err error) {
+	sw := slide.NewWriter(w, bits)
 	hd.start(r)
-	for sw.cnt < size {
+	for sw.Len() < size {
 		c, err := hd.decodeC(r)
 		if err != nil {
 			return 0, err
@@ -34,7 +38,7 @@ func (hd huffDecoder) decode(r *Reader, w io.Writer, bits, adjust uint, size int
 	if err := sw.Flush(); err != nil {
 		return 0, nil
 	}
-	return sw.crc, nil
+	return sw.CRC16(), nil
 }
 
 func decodeST1Start(r *Reader) {

@@ -242,7 +242,7 @@ func (r *Reader) Decode(w io.Writer) (decoded int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	if crc != r.curr.CRC {
+	if crc16(crc) != r.curr.CRC {
 		return 0, errBodyCRCMismatch
 	}
 	return int(r.curr.OriginalSize), nil
