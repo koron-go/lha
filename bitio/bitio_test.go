@@ -47,5 +47,19 @@ func TestBitSet(t *testing.T) {
 		before.set(p)
 		assertEquals(t, before, after, "bits after bits.set()")
 	}
-	f(bits{}, []byte{0xff}, bits{v: 0xff << 56, n: 8})
+	f(bits{}, []byte{0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0},
+		bits{v: 0x123456789abcdef0, n: 64})
+	f(bits{}, []byte{0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde},
+		bits{v: 0x123456789abcde << 8, n: 56})
+	f(bits{}, []byte{0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc},
+		bits{v: 0x123456789abc << 16, n: 48})
+	f(bits{}, []byte{0x12, 0x34, 0x56, 0x78, 0x9a},
+		bits{v: 0x123456789a << 24, n: 40})
+	f(bits{}, []byte{0x12, 0x34, 0x56, 0x78}, bits{v: 0x12345678 << 32, n: 32})
+	f(bits{}, []byte{0x12, 0x34, 0x56}, bits{v: 0x123456 << 40, n: 24})
+	f(bits{}, []byte{0x12, 0x34}, bits{v: 0x1234 << 48, n: 16})
+	f(bits{}, []byte{0x12}, bits{v: 0x12 << 56, n: 8})
+	f(bits{v: 0x123456789abcdef0, n: 64}, nil, bits{})
+	f(bits{v: 0xff, n: 64}, make([]byte, 8), bits{n: 64})
+	f(bits{v: 0xff, n: 64}, make([]byte, 9), bits{v: 0xff, n: 64})
 }
