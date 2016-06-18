@@ -11,10 +11,10 @@ type Header struct {
 	Time         time.Time
 	Attribute    uint8
 	Level        uint8
-	CRC          crc16
+	CRC          uint16
 	OSID         uint8
 
-	HeaderCRC *crc16
+	HeaderCRC *uint16
 	Name      string
 	Dir       string
 	DOS       struct {

@@ -113,10 +113,10 @@ func readExtendedHeader(r *Reader, h *Header, size uint16) (uint16, error) {
 }
 
 func readHeaderCRC(r *Reader, h *Header, size int) (remain int, err error) {
-	var crc crc16
-	*(*uint16)(&crc), err = r.readUint16NoCRC()
+	crc := new(uint16)
+	*crc, err = r.readUint16NoCRC()
 	if err == nil {
-		h.HeaderCRC = &crc
+		h.HeaderCRC = crc
 	}
 	return remain - 2, err
 }

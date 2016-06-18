@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"time"
+
+	"github.com/koron/go-lha/crc16"
 )
 
 const (
@@ -25,7 +27,7 @@ type Reader struct {
 	br  *bufio.Reader
 	err error
 	cnt uint64
-	crc crc16
+	crc crc16.Hash16
 
 	curr *Header
 }
@@ -35,12 +37,13 @@ func NewReader(r io.Reader) *Reader {
 	return &Reader{
 		raw: r,
 		br:  bufio.NewReader(r),
+		crc: crc16.NewIBM(),
 	}
 }
 
 // CRC16 returns current CRC16 value.
 func (r *Reader) CRC16() uint16 {
-	return uint16(r.crc)
+	return r.crc.Sum16()
 }
 
 // NextHeader reads a next file header.
@@ -62,12 +65,12 @@ func (r *Reader) NextHeader() (h *Header, err error) {
 		return nil, fmt.Errorf("unknown header level: %d", lv)
 	}
 	r.cnt = 0
-	r.crc = 0
+	r.crc.Reset()
 	h, err = proc(r)
 	if err != nil {
 		return nil, err
 	}
-	if h.HeaderCRC != nil && *h.HeaderCRC != r.crc {
+	if h.HeaderCRC != nil && *h.HeaderCRC != r.crc.Sum16() {
 		return nil, errHeaderCRCMismatch
 	}
 	r.cnt = 0
@@ -131,7 +134,7 @@ func (r *Reader) readBytes(n int) ([]byte, error) {
 		return nil, r.err
 	}
 	r.cnt += uint64(len(d))
-	r.crc = r.crc.updateBytes(d)
+	r.crc.Write(d)
 	return d, nil
 }
 
@@ -153,7 +156,7 @@ func (r *Reader) readUint8() (uint8, error) {
 		return 0, r.err
 	}
 	r.cnt++
-	r.crc = r.crc.updateByte(b0)
+	r.crc.Write([]byte{b0})
 	return uint8(b0), nil
 }
 
@@ -168,7 +171,7 @@ func (r *Reader) readUint16() (uint16, error) {
 		return 0, r.err
 	}
 	r.cnt += 2
-	r.crc = r.crc.update(b0, b1)
+	r.crc.Write([]byte{b0, b1})
 	return uint16(b1)<<8 + uint16(b0), nil
 }
 
@@ -183,7 +186,7 @@ func (r *Reader) readUint16NoCRC() (uint16, error) {
 		return 0, r.err
 	}
 	r.cnt += 2
-	r.crc = r.crc.update(0, 0)
+	r.crc.Write([]byte{0, 0})
 	return uint16(b1)<<8 + uint16(b0), nil
 }
 
@@ -202,7 +205,7 @@ func (r *Reader) readUint32() (uint32, error) {
 		return 0, r.err
 	}
 	r.cnt += 4
-	r.crc = r.crc.update(b0, b1, b2, b3)
+	r.crc.Write([]byte{b0, b1, b2, b3})
 	return uint32(b3)<<24 + uint32(b2)<<16 + uint32(b1)<<8 + uint32(b0), nil
 }
 
@@ -215,7 +218,7 @@ func (r *Reader) readUint64() (uint64, error) {
 		return 0, err
 	}
 	r.cnt += uint64(len(d))
-	r.crc = r.crc.updateBytes(d)
+	r.crc.Write(d)
 	return binary.LittleEndian.Uint64(d), nil
 }
 
@@ -242,7 +245,7 @@ func (r *Reader) Decode(w io.Writer) (decoded int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	if crc16(crc) != r.curr.CRC {
+	if crc != r.curr.CRC {
 		return 0, errBodyCRCMismatch
 	}
 	return int(r.curr.OriginalSize), nil
