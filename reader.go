@@ -240,8 +240,15 @@ func (r *Reader) Decode(w io.Writer) (decoded int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	// TODO: pass a wrapped io.Reader.
-	n, crc, err := m.decode(r.raw, w, int(r.curr.OriginalSize))
+	lr := &io.LimitedReader{
+		R: r.br,
+		N: int64(r.curr.PackedSize),
+	}
+	defer func() {
+		// count read length.
+		r.cnt += r.curr.PackedSize - uint64(lr.N)
+	}()
+	n, crc, err := m.decode(lr, w, int(r.curr.OriginalSize))
 	if err != nil {
 		return 0, err
 	}
