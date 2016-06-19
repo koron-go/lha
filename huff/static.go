@@ -18,11 +18,11 @@ func NewStaticDecoder(rd io.Reader, pbits, pnum int) Decoder {
 }
 
 func (sd *staticDecoder) DecodeC() (code uint16, err error) {
-	// TODO:
+	// TODO: docode C
 	return 0, nil
 }
 
 func (sd *staticDecoder) DecodeP() (offset uint16, err error) {
-	// TODO:
+	// TODO: decode P
 	return 0, nil
 }

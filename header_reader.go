@@ -16,13 +16,13 @@ var headerReaders = map[byte]headerReader{
 
 func readHeaderLv0(r *Reader) (*Header, error) {
 	log.Println("readHeader:", 0)
-	// TODO:
+	// TODO: support header LV0
 	return nil, nil
 }
 
 func readHeaderLv1(r *Reader) (*Header, error) {
 	log.Println("readHeader:", 1)
-	// TODO:
+	// TODO: support header LV1
 	return nil, nil
 }
 
@@ -56,7 +56,7 @@ func readHeaderLv2(r *Reader) (*Header, error) {
 
 func readHeaderLv3(r *Reader) (*Header, error) {
 	log.Println("readHeader:", 3)
-	// TODO:
+	// TODO: support header LV3
 	return nil, nil
 }
 
