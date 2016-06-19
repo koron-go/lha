@@ -240,13 +240,13 @@ func (r *Reader) Decode(w io.Writer) (decoded int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	crc, err := m.decoder.decode(r, w, m.dictBits, m.adjust, int(r.curr.OriginalSize))
-	// TODO: return correct decoded length.
+	// TODO: pass a wrapped io.Reader.
+	n, crc, err := m.decode(r.raw, w, int(r.curr.OriginalSize))
 	if err != nil {
 		return 0, err
 	}
 	if crc != r.curr.CRC {
 		return 0, errBodyCRCMismatch
 	}
-	return int(r.curr.OriginalSize), nil
+	return n, nil
 }

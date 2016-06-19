@@ -1,21 +1,26 @@
 package lha
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+
+	"github.com/koron/go-lha/huff"
+)
+
+type huffDecoderFactory func(r io.Reader) huff.Decoder
 
 type method struct {
-	dictBits uint
-	adjust   uint
-	decoder  huffDecoder
+	dictBits       uint
+	adjust         uint
+	decoderFactory huffDecoderFactory
 }
 
 var methods = map[string]*method{
 	"-lh5-": {
 		dictBits: 13,
 		adjust:   253,
-		decoder: huffDecoder{
-			start:   decodeST1Start,
-			decodeC: decodeST1C,
-			decodeP: decodeST1P,
+		decoderFactory: func(r io.Reader) huff.Decoder {
+			return huff.NewStaticDecoder(r, 4, 14)
 		},
 	},
 }
@@ -82,4 +87,13 @@ func getMethod(s string) (*method, error) {
 		return nil, fmt.Errorf("unsupported method: %s", s)
 	}
 	return m, nil
+}
+
+func (m *method) decode(r io.Reader, w io.Writer, size int) (n int, crc uint16, err error) {
+	hd := m.decoderFactory(r)
+	n, crc, err = huff.Decode(hd, w, m.dictBits, m.adjust, size)
+	if err != nil {
+		return n, 0, err
+	}
+	return n, crc, nil
 }
