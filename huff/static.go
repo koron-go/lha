@@ -30,6 +30,7 @@ func NewStaticDecoder(rd io.Reader, pbits, pnum int) Decoder {
 }
 
 func (sd *staticDecoder) prepareBlock() error {
+	// TODO:
 	return nil
 }
 
