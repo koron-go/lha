@@ -234,7 +234,7 @@ func (r *Reader) readTime() (time.Time, error) {
 	return time.Unix(int64(n), 0), nil
 }
 
-// Decode decode a file to w.  It returns decoded size and error.
+// Decode decodes a file to w.  It returns decoded size and error.
 func (r *Reader) Decode(w io.Writer) (decoded int, err error) {
 	m, err := getMethod(r.curr.Method)
 	if err != nil {
