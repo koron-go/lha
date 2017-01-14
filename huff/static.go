@@ -34,8 +34,8 @@ func (sd *staticDecoder) prepareBlock() error {
 	if err != nil {
 		return err
 	}
-	// TODO:
 	sd.nblock = int(nblock)
+	// TODO:
 	return nil
 }
 
