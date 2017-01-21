@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/koron/go-lha/huff"
+	"github.com/koron/go-lha/lzhuff"
 )
 
-type huffDecoderFactory func(r io.Reader) huff.Decoder
+type huffDecoderFactory func(r io.Reader) lzhuff.Decoder
 
 type method struct {
 	dictBits       uint
@@ -19,8 +19,8 @@ var methods = map[string]*method{
 	"-lh5-": {
 		dictBits: 13,
 		adjust:   253,
-		decoderFactory: func(r io.Reader) huff.Decoder {
-			return huff.NewStaticDecoder(r, 4, 14)
+		decoderFactory: func(r io.Reader) lzhuff.Decoder {
+			return lzhuff.NewStaticDecoder(r, 4, 14)
 		},
 	},
 }
@@ -91,7 +91,7 @@ func getMethod(s string) (*method, error) {
 
 func (m *method) decode(r io.Reader, w io.Writer, size int) (n int, crc uint16, err error) {
 	hd := m.decoderFactory(r)
-	n, crc, err = huff.Decode(hd, w, m.dictBits, m.adjust, size)
+	n, crc, err = lzhuff.Decode(hd, w, m.dictBits, m.adjust, size)
 	if err != nil {
 		return n, 0, err
 	}

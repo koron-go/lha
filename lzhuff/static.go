@@ -1,4 +1,4 @@
-package huff
+package lzhuff
 
 import (
 	"io"
