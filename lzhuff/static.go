@@ -6,7 +6,10 @@ import (
 	"github.com/koron/go-lha/bitio"
 )
 
-const nc = 510
+const (
+	nc    = 510
+	tbits = 5
+)
 
 type staticDecoder struct {
 	raw   io.Reader
@@ -15,6 +18,7 @@ type staticDecoder struct {
 	pnum  int
 
 	nblock int
+
 	lenC   [nc]byte
 	tableC [4096]byte
 }
@@ -27,6 +31,33 @@ func NewStaticDecoder(rd io.Reader, pbits, pnum int) Decoder {
 		pbits: pbits,
 		pnum:  pnum,
 	}
+}
+
+func (sd *staticDecoder) readLengths(nbits uint) ([]uint16, error) {
+	n, err := sd.brd.ReadBits16(nbits)
+	if err != nil {
+		return nil, err
+	}
+	if n == 0 {
+		c, err := sd.brd.ReadBits16(nbits)
+		if err != nil {
+			return nil, err
+		}
+		return []uint16{c}, nil
+	}
+	lengths := make([]uint16, n)
+	for i := range lengths {
+		l, err := sd.brd.ReadBits16(3)
+		if err != nil {
+			return nil, err
+		}
+		if l == 0x07 {
+			// TODO:
+		}
+		lengths[i] = l
+		// TODO:
+	}
+	return lengths, err
 }
 
 func (sd *staticDecoder) prepareBlock() error {
