@@ -15,8 +15,25 @@ type bits struct {
 	n uint
 }
 
+func (b *bits) skip(nbits uint) error {
+	if nbits > b.n {
+		return ErrTooMuchBits
+	}
+	b.v <<= nbits
+	b.n -= nbits
+	return nil
+}
+
+func (b *bits) peek(nbits uint) (uint64, error) {
+	if nbits > b.n {
+		return 0, ErrTooMuchBits
+	}
+	d := b.v >> (64 - nbits)
+	return d, nil
+}
+
 func (b *bits) read(nbits uint) (uint64, error) {
-	if nbits > 64 || nbits > b.n {
+	if nbits > b.n {
 		return 0, ErrTooMuchBits
 	}
 	d := b.v >> (64 - nbits)
