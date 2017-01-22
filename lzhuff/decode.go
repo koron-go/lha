@@ -36,7 +36,7 @@ func Decode(d Decoder, w io.Writer, bits, adjust uint, size int) (n int, crc uin
 		}
 	}
 	if err := sw.Flush(); err != nil {
-		return sw.Len(), 0, nil
+		return sw.Len(), 0, err
 	}
 	return sw.Len(), sw.CRC16(), nil
 }
