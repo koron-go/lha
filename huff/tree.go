@@ -37,6 +37,7 @@ func (t *Tree) Reset() *Tree {
 func (t *Tree) Add(length int) (leaf int, err error) {
 	//log.Printf("Add(%d)", length)
 	if length == 0 {
+		t.leaf++
 		return -1, nil
 	}
 	return t.add(length-1, 0)

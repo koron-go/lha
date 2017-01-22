@@ -11,7 +11,13 @@ func TestTreeAdd(t *testing.T) {
 				t.Errorf("%+v: Add(%d[#%d]) failed: %s", data, d, i, err)
 				return
 			}
-			if i != leaf {
+			if d == 0 {
+				if leaf != -1 {
+					t.Errorf("%+v: Add(%d) should return -1: %d", leaf)
+				}
+				continue
+			}
+			if leaf != i {
 				t.Errorf("%+v: Add(%d) unexpected leaf:%d expected:%d",
 					data, d, leaf, i)
 			}
@@ -37,4 +43,6 @@ func TestTreeAdd(t *testing.T) {
 		leaf:  8,
 		node:  12,
 	})
+	f([]int{0, 1, 1}, &Tree{nodes: []int{-2, -3, 0, 0}, leaf: 3, node: 0})
+	f([]int{1, 0, 1}, &Tree{nodes: []int{-1, -3, 0, 0}, leaf: 3, node: 0})
 }
