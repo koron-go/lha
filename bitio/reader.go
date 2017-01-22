@@ -73,7 +73,7 @@ func (r *Reader) PeekBit() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return d!=0, nil
+	return d != 0, nil
 }
 
 // SkipBit skips a bit.

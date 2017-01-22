@@ -1,6 +1,7 @@
 package lzhuff
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/koron/go-lha/bitio"
@@ -33,6 +34,23 @@ func NewStaticDecoder(rd io.Reader, pbits, pnum int) Decoder {
 	}
 }
 
+func (sd *staticDecoder) countTrues(max uint16) (count uint16, err error) {
+	for count <= max {
+		b, err := sd.brd.PeekBit()
+		if err != nil {
+			return 0, err
+		}
+		if !b {
+			return count, nil
+		}
+		if err := sd.brd.SkipBit(); err != nil {
+			return 0, err
+		}
+		count++
+	}
+	return 0, fmt.Errorf("too match trues, over %d", max)
+}
+
 func (sd *staticDecoder) readLengths(nbits uint) ([]uint16, error) {
 	n, err := sd.brd.ReadBits16(nbits)
 	if err != nil {
@@ -52,7 +70,11 @@ func (sd *staticDecoder) readLengths(nbits uint) ([]uint16, error) {
 			return nil, err
 		}
 		if l == 0x07 {
-			// TODO:
+			c, err := sd.countTrues(12)
+			if err != nil {
+				return nil, err
+			}
+			l += c
 		}
 		lengths[i] = l
 		// TODO:
