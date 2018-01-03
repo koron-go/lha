@@ -3,10 +3,10 @@ GO_SUBPKGS = $(shell go list ./... | grep -v /vendor/ | sed -e "s!$$(go list)!.!
 default: test
 
 test:
-	go test $(GO_SUBPKGS)
+	go test ./...
 
 test-full:
-	go test -v -race $(GO_SUBPKGS)
+	go test -v -race ./...
 
 vet:
 	@echo "go vet"
@@ -38,7 +38,7 @@ deps:
 	go get -v -u -d -t ./...
 
 tags:
-	ctags *.go
+	gotags -f tags -R .
 
 clean:
 	go clean
