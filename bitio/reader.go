@@ -69,7 +69,7 @@ func (r *Reader) ReadBit() (bool, error) {
 
 // PeekBit peeks a bit.
 func (r *Reader) PeekBit() (bool, error) {
-	d, err := r.peekBits(1)
+	d, err := r.PeekBits(1)
 	if err != nil {
 		return false, err
 	}
@@ -78,7 +78,7 @@ func (r *Reader) PeekBit() (bool, error) {
 
 // SkipBit skips a bit.
 func (r *Reader) SkipBit() error {
-	return r.skipBits(1)
+	return r.SkipBits(1)
 }
 
 func (r *Reader) readBits(n uint) (uint64, error) {
@@ -91,7 +91,8 @@ func (r *Reader) readBits(n uint) (uint64, error) {
 	return r.curr.read(n)
 }
 
-func (r *Reader) peekBits(n uint) (uint64, error) {
+// PeekBits peeks some bits.
+func (r *Reader) PeekBits(n uint) (uint64, error) {
 	if n > r.curr.n {
 		err := r.loadBits(n - r.curr.n)
 		if err != nil {
@@ -101,7 +102,8 @@ func (r *Reader) peekBits(n uint) (uint64, error) {
 	return r.curr.peek(n)
 }
 
-func (r *Reader) skipBits(n uint) error {
+// SkipBits skips some bits.
+func (r *Reader) SkipBits(n uint) error {
 	if n > r.curr.n {
 		err := r.loadBits(n - r.curr.n)
 		if err != nil {

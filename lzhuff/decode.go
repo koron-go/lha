@@ -27,11 +27,12 @@ func Decode(d Decoder, w io.Writer, bits, adjust uint, size int) (n int, crc uin
 			}
 			continue
 		}
+		ln := int(uint(c) - adjust)
 		off, err := d.DecodeP()
 		if err != nil {
 			return sw.Len(), 0, nil
 		}
-		if _, err := sw.WriteCopy(int(off), int(uint(c)-adjust)); err != nil {
+		if _, err := sw.WriteCopy(int(off), ln); err != nil {
 			return sw.Len(), 0, nil
 		}
 	}

@@ -99,15 +99,22 @@ func (sd *staticDecoder) DecodeC() (code uint16, err error) {
 		}
 	}
 	sd.nblock--
-	code, err = sd.brd.ReadBits16(12)
+	n, err := sd.brd.ReadBits16(12)
 	if err != nil {
 		return 0, err
 	}
+	code = uint16(sd.tableC[n])
 	if code < nc {
-		// TODO: push back 12-r.lenC[code] bits.
+		err := sd.brd.SkipBits(uint(sd.lenC[code]))
+		if err != nil {
+			return 0, err
+		}
 		return code, nil
 	}
-	// TODO: docode C
+	err = sd.brd.SkipBits(12)
+	if err != nil {
+		return 0, err
+	}
 	return 0, nil
 }
 
