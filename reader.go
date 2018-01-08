@@ -249,9 +249,10 @@ func (r *Reader) Decode(w io.Writer) (decoded int, err error) {
 		R: r.br,
 		N: int64(r.curr.PackedSize),
 	}
+	h := r.curr
 	defer func() {
 		// count read length.
-		r.cnt += r.curr.PackedSize - uint64(lr.N)
+		r.cnt += h.PackedSize - uint64(lr.N)
 	}()
 	n, crc, err := m.decode(lr, w, int(r.curr.OriginalSize))
 	if err != nil {

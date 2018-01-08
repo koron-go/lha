@@ -180,12 +180,12 @@ func (t *tree) setupTree(bits int) error {
 
 	// calculate first code
 	total := uint(0)
-	for i := 1; i <= len(start); i++ {
+	for i := 1; i < len(start); i++ {
 		start[i] = uint16(total)
 		total += uint(weight[i] * count[i])
 	}
-	if total > 0xffff {
-		return fmt.Errorf("bad tree, total overflow: %d", total)
+	if total != 0x10000 {
+		return fmt.Errorf("bad tree, total unexpected: %04x", total)
 	}
 
 	// shift data to make table
@@ -209,7 +209,9 @@ func (t *tree) setupTree(bits int) error {
 	// create tree
 	var (
 		avail = uint16(len(t.l))
-		vp     *uint16
+		vp    *uint16
+		left  = make([]uint16, 4096)
+		right = make([]uint16, 4096)
 	)
 	for i, v := range t.l {
 		if v == 0 {
@@ -221,7 +223,7 @@ func (t *tree) setupTree(bits int) error {
 			if c > 4096 {
 				c = 4096
 			}
-			for j := start[k]; j < c; j++ {
+			for j := start[v]; j < c; j++ {
 				t.v[j] = uint16(i)
 			}
 		} else {
@@ -230,12 +232,12 @@ func (t *tree) setupTree(bits int) error {
 			if x>>m > 4096 {
 				return fmt.Errorf("bad tree, big start: %d %d %d", i, v, x)
 			}
-			vp = &t.v[x >> m]
+			vp = &t.v[x>>m]
 			x <<= uint(bits)
 			for n := int(v) - bits; n > 0; n-- {
 				if *vp == 0 {
-					t.right[avail] = 0
-					t.left[avail] = 0
+					left[avail] = 0
+					right[avail] = 0
 					*vp = avail
 					avail++
 				}
@@ -252,6 +254,8 @@ func (t *tree) setupTree(bits int) error {
 		start[v] = c
 	}
 
+	t.left = left
+	t.right = right
 	return nil
 }
 
