@@ -3,7 +3,7 @@
 [![GoDoc](https://godoc.org/github.com/koron/go-lha?status.svg)](https://godoc.org/github.com/koron/go-lha)
 
 Very experimental package.
-Currently supports only extracting LH5 format.
+Currently supports only extracting LH5 format and Lv2 header.
 
 ## Example
 
