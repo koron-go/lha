@@ -51,6 +51,14 @@ func (b *bits) write(d uint64, nbits uint) error {
 	return nil
 }
 
+func (b *bits) get(n uint) (bool, error) {
+	if n >= b.n {
+		return false, ErrTooMuchBits
+	}
+	v := b.v & (1 << (63 - n)) != 0
+	return v, nil
+}
+
 func (b *bits) set(p []byte) {
 	if len(p) > 8 {
 		return

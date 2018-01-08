@@ -102,6 +102,20 @@ func (r *Reader) PeekBits(n uint) (uint64, error) {
 	return r.curr.peek(n)
 }
 
+// CountTrues counts continous true bits.
+func (r *Reader) CountTrues(n uint) (uint, error) {
+	for i := uint(0); i < n; i++ {
+		b, err := r.ReadBit()
+		if err != nil {
+			return 0, err
+		}
+		if !b {
+			return i, nil
+		}
+	}
+	return n, nil
+}
+
 // SkipBits skips some bits.
 func (r *Reader) SkipBits(n uint) error {
 	if n > r.curr.n {
