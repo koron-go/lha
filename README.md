@@ -1,6 +1,8 @@
 # LHa reader for golang
 
 [![GoDoc](https://godoc.org/github.com/koron-go/lha?status.svg)](https://godoc.org/github.com/koron-go/lha)
+[![Actions/Go](https://github.com/koron-go/lha/workflows/Go/badge.svg)](https://github.com/koron-go/lha/actions?query=workflow%3AGo)
+[![Go Report Card](https://goreportcard.com/badge/github.com/koron-go/lha)](https://goreportcard.com/report/github.com/koron-go/lha)
 
 Very experimental package.
 Currently supports only extracting LH5 format and Lv2 header.
