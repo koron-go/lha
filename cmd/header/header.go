@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/koron/go-lha"
+	"github.com/koron-go/lha"
 )
 
 func main() {

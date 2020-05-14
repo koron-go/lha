@@ -8,7 +8,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/koron/go-lha/crc16"
+	"github.com/koron-go/lha/crc16"
 )
 
 const (

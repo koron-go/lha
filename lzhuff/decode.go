@@ -3,7 +3,7 @@ package lzhuff
 import (
 	"io"
 
-	"github.com/koron/go-lha/slide"
+	"github.com/koron-go/lha/slide"
 )
 
 // Decoder provides huffman decoder interface.

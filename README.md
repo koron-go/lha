@@ -1,6 +1,6 @@
 # LHa reader for golang
 
-[![GoDoc](https://godoc.org/github.com/koron/go-lha?status.svg)](https://godoc.org/github.com/koron/go-lha)
+[![GoDoc](https://godoc.org/github.com/koron-go/lha?status.svg)](https://godoc.org/github.com/koron-go/lha)
 
 Very experimental package.
 Currently supports only extracting LH5 format and Lv2 header.

@@ -3,7 +3,7 @@ package slide
 import (
 	"io"
 
-	"github.com/koron/go-lha/crc16"
+	"github.com/koron-go/lha/crc16"
 )
 
 // Writer provides slide window (buffered) writer.

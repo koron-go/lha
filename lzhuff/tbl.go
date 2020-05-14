@@ -3,7 +3,7 @@ package lzhuff
 import (
 	"fmt"
 
-	"github.com/koron/go-lha/bitio"
+	"github.com/koron-go/lha/bitio"
 )
 
 type tree struct {

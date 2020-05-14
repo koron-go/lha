@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/koron/go-lha/lzhuff"
+	"github.com/koron-go/lha/lzhuff"
 )
 
 type huffDecoderFactory func(r io.Reader) lzhuff.Decoder
