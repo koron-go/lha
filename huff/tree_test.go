@@ -13,7 +13,7 @@ func TestTreeAdd(t *testing.T) {
 			}
 			if d == 0 {
 				if leaf != -1 {
-					t.Errorf("%+v: Add(%d) should return -1: %d", leaf)
+					t.Errorf("%+v: Add(%d) should return -1: %d", data, d, leaf)
 				}
 				continue
 			}
