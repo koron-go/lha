@@ -1,8 +1,10 @@
 package lha
 
 import (
+	"errors"
 	"log"
 	"os"
+	"time"
 )
 
 type headerReader func(r *Reader) (*Header, error)
@@ -15,9 +17,59 @@ var headerReaders = map[byte]headerReader{
 }
 
 func readHeaderLv0(r *Reader) (*Header, error) {
-	log.Println("readHeader:", 0)
-	// TODO: support header LV0
-	return nil, nil
+	h := new(Header)
+	headerSize, _ := r.readUint8()
+	h.Size = uint16(headerSize)
+	h.Sum, _ = r.readUint8()
+	h.Method, _ = r.readStringN(5)
+	packedSize, _ := r.readUint32()
+	h.PackedSize = uint64(packedSize)
+	originalSize, _ := r.readUint32()
+	h.OriginalSize = uint64(originalSize)
+	dt, _ := r.readUint32()
+	h.Time = fromDOSTimestamp(dt)
+	h.Attribute, _ = r.readUint8()
+	h.Level, _ = r.readUint8()
+	nameLen, _ := r.readUint8()
+	h.Name, _ = r.readStringN(int(nameLen))
+
+	extendSize := int(headerSize) + 2 - int(nameLen) - 24
+	if extendSize < 0 {
+		if extendSize == -2 {
+			h.HeaderCRC = nil
+			return h, nil
+		}
+		return nil, errors.New("unknown header")
+	}
+
+	*(*uint16)(&h.CRC), _ = r.readUint16()
+	if extendSize == 0 {
+		return h, nil
+	}
+
+	extendType, _ := r.readUint8()
+	h.ExtendType = ExtendType(extendType)
+	extendSize--
+
+	if extendType == ExtendUNIX {
+		if extendSize >= 11 {
+			h.MinorVersion, _ = r.readUint8()
+			h.UNIX.Time, _ = r.readTime()
+			h.UNIX.Perm, _ = r.readUint16()
+			h.UNIX.UID, _ = r.readUint16()
+			h.UNIX.GID, _ = r.readUint16()
+		} else {
+			h.ExtendType = ExtendGeneric
+		}
+	}
+
+	if remain := int(h.Size) - int(r.cnt); remain > 0 {
+		r.skip(remain)
+	}
+	if r.err != nil {
+		return nil, r.err
+	}
+	return h, nil
 }
 
 func readHeaderLv1(r *Reader) (*Header, error) {
@@ -177,4 +229,14 @@ func readUNIXUser(r *Reader, h *Header, size int) (remain int, err error) {
 func readUNIXTime(r *Reader, h *Header, size int) (remain int, err error) {
 	h.UNIX.Time, err = r.readTime()
 	return size - 4, err
+}
+
+func fromDOSTimestamp(v uint32) time.Time {
+	y := int(1980 + (v>>25)&0x7f)
+	m := int((v >> 21) & 0x0f)
+	d := int((v >> 16) & 0x1f)
+	h := int((v >> 11) & 0x1f)
+	mi := int((v >> 5) & 0x3f)
+	s := int(v&0x1f) * 2
+	return time.Date(y, time.Month(m), d, h, mi, s, 0, time.Local)
 }
