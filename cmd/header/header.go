@@ -2,11 +2,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 
 	"github.com/koron-go/lha"
+	"github.com/kr/pretty"
 )
 
 func main() {
@@ -26,6 +26,6 @@ func main() {
 		if h == nil {
 			break
 		}
-		fmt.Printf("%+v\n", h)
+		pretty.Println(h)
 	}
 }
