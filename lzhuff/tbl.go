@@ -242,9 +242,9 @@ func (tr *tree) setupTree(bits int) error {
 					avail++
 				}
 				if (x & 0x8000) != 0 {
-					vp = &tr.right[*vp]
+					vp = &right[*vp]
 				} else {
-					vp = &tr.left[*vp]
+					vp = &left[*vp]
 				}
 				x <<= 1
 			}
