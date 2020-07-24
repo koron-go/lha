@@ -22,19 +22,19 @@ func newTree(nl int, nv int) *tree {
 }
 
 // readAsP reads stream as T or P table.
-func (t *tree) readAsP(r *bitio.Reader, bits int, special int) error {
+func (tr *tree) readAsP(r *bitio.Reader, bits int, special int) error {
 	ubits := uint(bits)
 	n0, err := r.ReadBits16(ubits)
 	if err != nil {
 		return err
 	}
 	if n0 == 0 {
-		return t.setup0(r, ubits)
+		return tr.setup0(r, ubits)
 	}
 
 	var (
 		n  = int(n0)
-		nl = len(t.l)
+		nl = len(tr.l)
 		i  = 0
 	)
 	if n > nl {
@@ -53,7 +53,7 @@ func (t *tree) readAsP(r *bitio.Reader, bits int, special int) error {
 			c += uint16(c2)
 		}
 
-		t.l[i] = c
+		tr.l[i] = c
 		i++
 		if i == special {
 			c, err := r.ReadBits16(2)
@@ -61,7 +61,7 @@ func (t *tree) readAsP(r *bitio.Reader, bits int, special int) error {
 				return err
 			}
 			for c > 0 && i < n {
-				t.l[i] = 0
+				tr.l[i] = 0
 				i++
 				c--
 			}
@@ -70,26 +70,26 @@ func (t *tree) readAsP(r *bitio.Reader, bits int, special int) error {
 
 	// fill remain with 0
 	for i < nl {
-		t.l[i] = 0
+		tr.l[i] = 0
 		i++
 	}
-	return t.setupTree(8)
+	return tr.setupTree(8)
 }
 
 // readAsC reads stream as C table.
-func (t *tree) readAsC(r *bitio.Reader, bits int, tmp *tree) error {
+func (tr *tree) readAsC(r *bitio.Reader, bits int, tmp *tree) error {
 	ubits := uint(bits)
 	n0, err := r.ReadBits16(ubits)
 	if err != nil {
 		return err
 	}
 	if n0 == 0 {
-		return t.setup0(r, ubits)
+		return tr.setup0(r, ubits)
 	}
 
 	var (
 		n  = int(n0)
-		nl = len(t.l)
+		nl = len(tr.l)
 		i  = 0
 	)
 	if n > nl {
@@ -102,7 +102,7 @@ func (t *tree) readAsC(r *bitio.Reader, bits int, tmp *tree) error {
 		}
 
 		if c > 2 {
-			t.l[i] = c - 2
+			tr.l[i] = c - 2
 			i++
 			continue
 		}
@@ -124,7 +124,7 @@ func (t *tree) readAsC(r *bitio.Reader, bits int, tmp *tree) error {
 			c += 20
 		}
 		for i < nl && c > 0 {
-			t.l[i] = 0
+			tr.l[i] = 0
 			i++
 			c--
 		}
@@ -132,35 +132,35 @@ func (t *tree) readAsC(r *bitio.Reader, bits int, tmp *tree) error {
 
 	// fill remain with 0
 	for i < nl {
-		t.l[i] = 0
+		tr.l[i] = 0
 		i++
 	}
-	return t.setupTree(12)
+	return tr.setupTree(12)
 }
 
-func (t *tree) setup0(r *bitio.Reader, bits uint) error {
+func (tr *tree) setup0(r *bitio.Reader, bits uint) error {
 	c, err := r.ReadBits16(bits)
 	if err != nil {
 		return err
 	}
-	for i := range t.l {
-		t.l[i] = 0
+	for i := range tr.l {
+		tr.l[i] = 0
 	}
-	for i := range t.v {
-		t.v[i] = c
+	for i := range tr.v {
+		tr.v[i] = c
 	}
 	return nil
 }
 
-func (t *tree) getL(n int) uint16 {
-	return t.l[n]
+func (tr *tree) getL(n int) uint16 {
+	return tr.l[n]
 }
 
-func (t *tree) getV(n int) uint16 {
-	return t.v[n]
+func (tr *tree) getV(n int) uint16 {
+	return tr.v[n]
 }
 
-func (t *tree) setupTree(bits int) error {
+func (tr *tree) setupTree(bits int) error {
 	var (
 		count  = make([]uint16, 17)
 		weight = make([]uint16, 17)
@@ -171,11 +171,11 @@ func (t *tree) setupTree(bits int) error {
 	}
 
 	// count
-	for i := range t.l {
-		if int(t.l[i]) >= len(count) {
-			return fmt.Errorf("bad tree, length overflow: %d", t.l[i])
+	for i := range tr.l {
+		if int(tr.l[i]) >= len(count) {
+			return fmt.Errorf("bad tree, length overflow: %d", tr.l[i])
 		}
-		count[t.l[i]]++
+		count[tr.l[i]]++
 	}
 
 	// calculate first code
@@ -202,18 +202,18 @@ func (t *tree) setupTree(bits int) error {
 	}
 	if j != 0 {
 		for i := int(j); i < k; i++ {
-			t.v[i] = 0
+			tr.v[i] = 0
 		}
 	}
 
 	// create tree
 	var (
-		avail = uint16(len(t.l))
+		avail = uint16(len(tr.l))
 		vp    *uint16
 		left  = make([]uint16, 4096)
 		right = make([]uint16, 4096)
 	)
-	for i, v := range t.l {
+	for i, v := range tr.l {
 		if v == 0 {
 			continue
 		}
@@ -224,7 +224,7 @@ func (t *tree) setupTree(bits int) error {
 				c = 4096
 			}
 			for j := start[v]; j < c; j++ {
-				t.v[j] = uint16(i)
+				tr.v[j] = uint16(i)
 			}
 		} else {
 			// code not in array
@@ -232,7 +232,7 @@ func (t *tree) setupTree(bits int) error {
 			if x>>m > 4096 {
 				return fmt.Errorf("bad tree, big start: %d %d %d", i, v, x)
 			}
-			vp = &t.v[x>>m]
+			vp = &tr.v[x>>m]
 			x <<= uint(bits)
 			for n := int(v) - bits; n > 0; n-- {
 				if *vp == 0 {
@@ -242,9 +242,9 @@ func (t *tree) setupTree(bits int) error {
 					avail++
 				}
 				if (x & 0x8000) != 0 {
-					vp = &t.right[*vp]
+					vp = &tr.right[*vp]
 				} else {
-					vp = &t.left[*vp]
+					vp = &tr.left[*vp]
 				}
 				x <<= 1
 			}
@@ -254,24 +254,24 @@ func (t *tree) setupTree(bits int) error {
 		start[v] = c
 	}
 
-	t.left = left
-	t.right = right
+	tr.left = left
+	tr.right = right
 	return nil
 }
 
-func (t *tree) decode(r *bitio.Reader, bits uint) (uint16, error) {
+func (tr *tree) decode(r *bitio.Reader, bits uint) (uint16, error) {
 	c0, err := r.PeekBits(bits)
 	if err != nil {
 		return 0, err
 	}
-	if int(c0) >= len(t.v) {
-		return 0, fmt.Errorf("c0 overflow: %d >= %d", c0, len(t.v))
+	if int(c0) >= len(tr.v) {
+		return 0, fmt.Errorf("c0 overflow: %d >= %d", c0, len(tr.v))
 	}
-	c := t.v[c0]
+	c := tr.v[c0]
 
-	// when hits t.l array.
-	if int(c) < len(t.l) {
-		err := r.SkipBits(uint(t.l[c]))
+	// when hits tr.l array.
+	if int(c) < len(tr.l) {
+		err := r.SkipBits(uint(tr.l[c]))
 		if err != nil {
 			return 0, err
 		}
@@ -283,26 +283,26 @@ func (t *tree) decode(r *bitio.Reader, bits uint) (uint16, error) {
 		return 0, nil
 	}
 
-	for int(c) >= len(t.l) {
+	for int(c) >= len(tr.l) {
 		b, err := r.ReadBit()
 		if err != nil {
 			return 0, err
 		}
 		if b {
-			if int(c) >= len(t.right) {
-				return 0, fmt.Errorf("over right: %d >= %d", c, len(t.right))
+			if int(c) >= len(tr.right) {
+				return 0, fmt.Errorf("over right: %d >= %d", c, len(tr.right))
 			}
-			c = t.right[c]
+			c = tr.right[c]
 		} else {
-			if int(c) >= len(t.left) {
-				return 0, fmt.Errorf("over left: %d >= %d", c, len(t.left))
+			if int(c) >= len(tr.left) {
+				return 0, fmt.Errorf("over left: %d >= %d", c, len(tr.left))
 			}
-			c = t.left[c]
+			c = tr.left[c]
 		}
-		if int(c) >= len(t.left) {
-			return 0, fmt.Errorf("over left: %d >= %d", c, len(t.left))
+		if int(c) >= len(tr.left) {
+			return 0, fmt.Errorf("over left: %d >= %d", c, len(tr.left))
 		}
-		if c == t.left[c] {
+		if c == tr.left[c] {
 			break
 		}
 	}
