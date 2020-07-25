@@ -35,20 +35,32 @@ type Header struct {
 	}
 }
 
+// ExtendType is type of exntend part.
 type ExtendType uint8
 
 const (
-	ExtendGeneric ExtendType = ExtendType(0)
-
-	ExtendUNIX   = 'U'
-	ExtendMSDOS  = 'M'
-	ExtendMACOS  = 'm'
-	ExtendOS9    = '9'
-	ExtendOS2    = '2'
-	ExtendOS68K  = 'K'
-	ExtendOS386  = '3'
-	ExtendHuman  = 'H'
-	ExtendCPM    = 'C'
-	ExtendFLEX   = 'F'
-	ExtendRUNSER = 'R'
+	// ExtendGeneric is generic extend.
+	ExtendGeneric ExtendType = 0
+	// ExtendUNIX is extend for UNIX.
+	ExtendUNIX ExtendType = 'U'
+	// ExtendMSDOS is extend for MS-DOS.
+	ExtendMSDOS ExtendType = 'M'
+	// ExtendMACOS is extend for MacOS
+	ExtendMACOS ExtendType = 'm'
+	// ExtendOS9 is extend for OS/9
+	ExtendOS9 ExtendType = '9'
+	// ExtendOS2 is extend for OS/2
+	ExtendOS2 ExtendType = '2'
+	// ExtendOS68K is extend for OS68K
+	ExtendOS68K ExtendType = 'K'
+	// ExtendOS386 is extend for OS386
+	ExtendOS386 ExtendType = '3'
+	// ExtendHuman is extend for Human
+	ExtendHuman ExtendType = 'H'
+	// ExtendCPM is extend for CP/M
+	ExtendCPM ExtendType = 'C'
+	// ExtendFLEX is extend for FLEX
+	ExtendFLEX ExtendType = 'F'
+	// ExtendRUNSER is extend for RUNSER
+	ExtendRUNSER ExtendType = 'R'
 )

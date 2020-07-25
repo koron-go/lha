@@ -152,14 +152,6 @@ func (tr *tree) setup0(r *bitio.Reader, bits uint) error {
 	return nil
 }
 
-func (tr *tree) getL(n int) uint16 {
-	return tr.l[n]
-}
-
-func (tr *tree) getV(n int) uint16 {
-	return tr.v[n]
-}
-
 func (tr *tree) setupTree(bits int) error {
 	var (
 		count  = make([]uint16, 17)

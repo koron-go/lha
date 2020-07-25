@@ -51,7 +51,7 @@ func readHeaderLv0(r *Reader) (*Header, error) {
 	h.ExtendType = ExtendType(extendType)
 	extendSize--
 
-	if extendType == ExtendUNIX {
+	if ExtendType(extendType) == ExtendUNIX {
 		if extendSize >= 11 {
 			h.MinorVersion, _ = r.readUint8()
 			h.UNIX.Time, _ = r.readTime()
