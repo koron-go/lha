@@ -4,6 +4,34 @@ import (
 	"io"
 )
 
+type paddingReader struct {
+	l *io.LimitedReader
+}
+
+// Read reads data from based io.LimitedReader. but it pads zero bytes when try
+// to read data over limitation.
+func (pr *paddingReader) Read(b []byte) (int, error) {
+	n := len(b)
+	if int64(n) <= pr.l.N {
+		return pr.l.Read(b)
+	}
+	m, err := pr.l.Read(b[:int(pr.l.N)])
+	if err != nil {
+		return m, err
+	}
+	for i := m; i < n; i++ {
+		b[i] = 0
+	}
+	return n, nil
+}
+
+func wrapRead(r io.Reader) io.Reader {
+	if l, ok := r.(*io.LimitedReader); ok {
+		return &paddingReader{l: l}
+	}
+	return r
+}
+
 // Reader is a reader of bit stream.
 type Reader struct {
 	rd    io.Reader
@@ -15,7 +43,7 @@ type Reader struct {
 // NewReader creates a bit stream reader.
 func NewReader(rd io.Reader) *Reader {
 	return &Reader{
-		rd: rd,
+		rd: wrapRead(rd),
 	}
 }
 
