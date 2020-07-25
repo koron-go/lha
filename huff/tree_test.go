@@ -1,6 +1,10 @@
 package huff
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/koron-go/lha/internal/assert"
+)
 
 func TestTreeAdd(t *testing.T) {
 	f := func(data []int, expected *Tree) {
@@ -22,7 +26,7 @@ func TestTreeAdd(t *testing.T) {
 					data, d, leaf, i)
 			}
 		}
-		assertEquals(t, actual, expected, "%+v: unmatched tree", data)
+		assert.Equalf(t, actual, expected, "%+v: unmatched tree", data)
 	}
 	f([]int{1, 1}, &Tree{nodes: []int{-1, -2}, leaf: 2, node: 0})
 	f([]int{1, 2, 2}, &Tree{nodes: []int{-1, 2, -2, -3}, leaf: 3, node: 2})

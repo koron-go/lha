@@ -1,13 +1,17 @@
 package bitio
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/koron-go/lha/internal/assert"
+)
 
 func TestBitsRead(t *testing.T) {
 	f := func(before bits, nbits uint, rval uint64, rerr error, after bits) {
 		val, err := before.read(nbits)
-		assertEquals(t, val, rval, "bits.read() returned value")
-		assertEquals(t, err, rerr, "bits.read() returned error")
-		assertEquals(t, before, after, "bits after bits.read()")
+		assert.Equalf(t, val, rval, "bits.read() returned value")
+		assert.Equalf(t, err, rerr, "bits.read() returned error")
+		assert.Equalf(t, before, after, "bits after bits.read()")
 	}
 	f(bits{v: 1 << 63, n: 1}, 1, 1, nil, bits{})
 	f(bits{v: 1 << 63, n: 2}, 1, 1, nil, bits{n: 1})
@@ -21,8 +25,8 @@ func TestBitsRead(t *testing.T) {
 func TestBitWrite(t *testing.T) {
 	f := func(before bits, d uint64, nbits uint, rerr error, after bits) {
 		err := before.write(d, nbits)
-		assertEquals(t, err, rerr, "bits.write() returned error")
-		assertEquals(t, before, after, "bits after bits.write()")
+		assert.Equalf(t, err, rerr, "bits.write() returned error")
+		assert.Equalf(t, before, after, "bits after bits.write()")
 	}
 	f(bits{}, 0xff, 8, nil, bits{v: 0xff << 56, n: 8})
 	f(bits{}, 0xff, 16, nil, bits{v: 0xff << 48, n: 16})
@@ -35,7 +39,7 @@ func TestBitWrite(t *testing.T) {
 func TestBitSet(t *testing.T) {
 	f := func(before bits, p []byte, after bits) {
 		before.set(p)
-		assertEquals(t, before, after, "bits after bits.set()")
+		assert.Equalf(t, before, after, "bits after bits.set()")
 	}
 	f(bits{}, []byte{0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0},
 		bits{v: 0x123456789abcdef0, n: 64})

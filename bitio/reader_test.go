@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"io"
 	"testing"
+
+	"github.com/koron-go/lha/internal/assert"
 )
 
 type readBits struct {
@@ -17,8 +19,8 @@ func TestReaderReadBits(t *testing.T) {
 		r := NewReader(bytes.NewReader(d))
 		for i, q := range p {
 			val, err := r.ReadBits(q.nbits)
-			assertEquals(t, val, q.rval, "Reader.ReadBits() returned value for #%d", i)
-			assertEquals(t, err, q.rerr, "Reader.ReadBits() returned error for #%d", i)
+			assert.Equalf(t, val, q.rval, "Reader.ReadBits() returned value for #%d", i)
+			assert.Equalf(t, err, q.rerr, "Reader.ReadBits() returned error for #%d", i)
 		}
 		return r
 	}

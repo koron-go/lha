@@ -1,6 +1,8 @@
 package bitio
 
-import "io"
+import (
+	"io"
+)
 
 // Reader is a reader of bit stream.
 type Reader struct {
@@ -144,7 +146,13 @@ func (r *Reader) loadBits(nbits uint) error {
 		}
 		if err != nil {
 			if err == io.EOF && r.curr.n+r.ahead.n != 0 {
-				err = ErrTooLessBits
+				//// supply zero bits if there are some bits remained.
+				//err := r.ahead.write(0, nbits)
+				//if err != nil {
+				//	return err
+				//}
+				//continue
+				return ErrTooLessBits
 			}
 			return err
 		}
