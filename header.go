@@ -21,18 +21,25 @@ type Header struct {
 	ExtendType   ExtendType
 	MinorVersion uint8
 	Dir          string
-	DOS          struct {
-		Attr uint16
-		Time uint64
-	}
-	UNIX struct {
-		Perm  uint16
-		GID   uint16
-		UID   uint16
-		Group string
-		User  string
-		Time  time.Time
-	}
+
+	DOS  HeaderDOS
+	UNIX HeaderUNIX
+}
+
+// HeaderDOS is exntended header for DOS.
+type HeaderDOS struct {
+	Attr uint16
+	Time uint64
+}
+
+// HeaderUNIX is exntended header for UNIX.
+type HeaderUNIX struct {
+	Perm  uint16
+	GID   uint16
+	UID   uint16
+	Group string
+	User  string
+	Time  time.Time
 }
 
 // ExtendType is type of exntend part.
