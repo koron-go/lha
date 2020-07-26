@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/koron-go/lha/crc16"
 	"github.com/koron-go/lha/lzhuff"
 )
 
@@ -16,6 +17,14 @@ type method struct {
 }
 
 var methods = map[string]*method{
+	"-lh0-": {
+		dictBits: 0,
+		adjust:   253,
+		decoderFactory: func(r io.Reader) lzhuff.Decoder {
+			// use copyRaw() to extract raw data.
+			return nil
+		},
+	},
 	"-lh4-": {
 		dictBits: 12,
 		adjust:   253,
@@ -48,10 +57,6 @@ var methods = map[string]*method{
 
 // TODO: implement these methods.
 //var unsupportedMethods = map[string]*method{
-//	"-lh0-": {
-//		dictBits: 0,
-//		adjust:   253,
-//	},
 //	"-lh1-": {
 //		dictBits: 12,
 //		adjust:   253,
@@ -100,9 +105,21 @@ func getMethod(s string) (*method, error) {
 
 func (m *method) decode(r io.Reader, w io.Writer, size int) (n int, crc uint16, err error) {
 	hd := m.decoderFactory(r)
+	if hd == nil {
+		return m.copyRaw(r, w, size)
+	}
 	n, crc, err = lzhuff.Decode(hd, w, m.dictBits, m.adjust, size)
 	if err != nil {
 		return n, 0, err
 	}
 	return n, crc, nil
+}
+
+func (m *method) copyRaw(r io.Reader, w io.Writer, size int) (n int, crc uint16, err error) {
+	hash := crc16.NewIBM()
+	n64, err := io.CopyN(io.MultiWriter(hash, w), r, int64(size))
+	if err != nil {
+		return int(n64), 0, err
+	}
+	return int(n64), hash.Sum16(), nil
 }
