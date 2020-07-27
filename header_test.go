@@ -50,6 +50,15 @@ func toHeaderTime(t testing.TB, value string) time.Time {
 	return v
 }
 
+func toUTCTime(t testing.TB, value string) time.Time {
+	t.Helper()
+	v, err := time.ParseInLocation(time.RFC3339, value, time.Local)
+	if err != nil {
+		t.Fatalf("failed to time.Parse: %s", err)
+	}
+	return v
+}
+
 func TestHeader_Generic(t *testing.T) {
 	entries := testExtractFile(t, "testdata/header-generic.lzh")
 	assert.Equal(t, []*entry{
@@ -84,7 +93,7 @@ func TestHeader_Lv0(t *testing.T) {
 					Perm: 0100644,
 					GID:  100,
 					UID:  501,
-					Time: toHeaderTime(t, "2005-10-15 01:31:34"),
+					Time: toUTCTime(t, "2005-10-14T16:31:34Z"),
 				},
 			},
 			Size: 0,
@@ -111,7 +120,7 @@ func TestHeader_Lv1(t *testing.T) {
 					Perm: 0100644,
 					GID:  100,
 					UID:  501,
-					Time: toHeaderTime(t, "2005-10-15 01:31:34"),
+					Time: toUTCTime(t, "2005-10-14T16:31:34Z"),
 				},
 			},
 			Size: 0,
@@ -131,7 +140,7 @@ func TestHeader_Lv2(t *testing.T) {
 			Header: &Header{
 				Size:      54,
 				Method:    "-lh5-",
-				Time:      toHeaderTime(t, "2005-10-15 01:31:34"),
+				Time:      toUTCTime(t, "2005-10-14T16:31:34Z"),
 				Attribute: 32,
 				Level:     2,
 				OSID:      0x55,
