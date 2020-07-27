@@ -2,7 +2,6 @@ package lha
 
 import (
 	"errors"
-	"log"
 	"os"
 	"time"
 )
@@ -92,6 +91,7 @@ func readHeaderLv1(r *Reader) (*Header, error) {
 	h.Name, _ = r.readStringN(int(nameLen))
 	*(*uint16)(&h.CRC), _ = r.readUint16()
 	h.OSID, _ = r.readUint8()
+	// FIXME: consider 64bit length.
 	if remain := int(h.Size) - int(nameLen) - 25; remain > 0 {
 		r.skip(remain)
 	}
@@ -132,8 +132,28 @@ func readHeaderLv2(r *Reader) (*Header, error) {
 }
 
 func readHeaderLv3(r *Reader) (*Header, error) {
-	log.Println("readHeader:", 3)
-	// TODO: support header LV3
+	h := new(Header)
+	_, _ = r.readUint16()
+	h.Method, _ = r.readStringN(5)
+	packedSize, _ := r.readUint32()
+	h.PackedSize = uint64(packedSize)
+	originalSize, _ := r.readUint32()
+	h.OriginalSize = uint64(originalSize)
+	h.Time, _ = r.readTime()
+	h.Attribute, _ = r.readUint8()
+	h.Level, _ = r.readUint8()
+	*(*uint16)(&h.CRC), _ = r.readUint16()
+	h.OSID, _ = r.readUint8()
+	headerSize, _ := r.readUint32()
+	nextSize, _ := r.readUint32()
+	readAllExtendedHeaders(r, h, uint16(nextSize))
+	// FIXME: consider 64bit length.
+	if remain := int(headerSize) - int(r.cnt); remain >= 0 {
+		r.skip(remain)
+	}
+	if r.err != nil {
+		return nil, r.err
+	}
 	return nil, nil
 }
 
@@ -205,8 +225,8 @@ func readFilename(r *Reader, h *Header, size int) (remain int, err error) {
 
 func readDirectory(r *Reader, h *Header, size int) (remain int, err error) {
 	d, err := r.readBytes(size)
-	for i := range d {
-		if d[i] == 0xff {
+	for i, b := range d {
+		if b == 0xff {
 			d[i] = os.PathSeparator
 		}
 	}
