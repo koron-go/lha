@@ -94,15 +94,30 @@ func TestHeader_Lv0(t *testing.T) {
 }
 
 func TestHeader_Lv1(t *testing.T) {
-	t.Skip("not implemented yet")
-	//entries := testExtractFile(t, "testdata/header-lv1.lzh")
-	//assert.Equal(t, []*entry{
-	//	{
-	//		Header: &Header{},
-	//		Size:   0,
-	//		Err:    nil,
-	//	},
-	//}, entries)
+	entries := testExtractFile(t, "testdata/header-lv1.lzh")
+	assert.Equal(t, []*entry{
+		{
+			Header: &Header{
+				Size:       33,
+				Sum:        210,
+				Method:     "-lh5-",
+				PackedSize: 19,
+				Time:       toHeaderTime(t, "2005-10-15 01:31:34"),
+				Attribute:  0x20,
+				Level:      1,
+				OSID:       0x55,
+				Name:       "nullfile",
+				UNIX: HeaderUNIX{
+					Perm: 0100644,
+					GID:  100,
+					UID:  501,
+					Time: toHeaderTime(t, "2005-10-15 01:31:34"),
+				},
+			},
+			Size: 0,
+			Err:  nil,
+		},
+	}, entries)
 }
 
 func uint16p(v uint16) *uint16 {

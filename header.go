@@ -5,7 +5,7 @@ import "time"
 // Header is header of file in LHA archive.
 type Header struct {
 	Size         uint16
-	Sum          uint8 // for level 0
+	Sum          uint8 // for level 0, 1
 	Method       string
 	PackedSize   uint64
 	OriginalSize uint64

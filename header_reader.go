@@ -21,6 +21,7 @@ func readHeaderLv0(r *Reader) (*Header, error) {
 	headerSize, _ := r.readUint8()
 	h.Size = uint16(headerSize)
 	h.Sum, _ = r.readUint8()
+	// FIXME: verify check sum
 	h.Method, _ = r.readStringN(5)
 	packedSize, _ := r.readUint32()
 	h.PackedSize = uint64(packedSize)
@@ -73,9 +74,33 @@ func readHeaderLv0(r *Reader) (*Header, error) {
 }
 
 func readHeaderLv1(r *Reader) (*Header, error) {
-	log.Println("readHeader:", 1)
-	// TODO: support header LV1
-	return nil, nil
+	h := new(Header)
+	headerSize, _ := r.readUint8()
+	h.Size = uint16(headerSize)
+	h.Sum, _ = r.readUint8()
+	// FIXME: verify check sum
+	h.Method, _ = r.readStringN(5)
+	packedSize, _ := r.readUint32()
+	h.PackedSize = uint64(packedSize)
+	originalSize, _ := r.readUint32()
+	h.OriginalSize = uint64(originalSize)
+	dt, _ := r.readUint32()
+	h.Time = fromDOSTimestamp(dt)
+	h.Attribute, _ = r.readUint8() // 0x20 fixed
+	h.Level, _ = r.readUint8()
+	nameLen, _ := r.readUint8()
+	h.Name, _ = r.readStringN(int(nameLen))
+	*(*uint16)(&h.CRC), _ = r.readUint16()
+	h.OSID, _ = r.readUint8()
+	if remain := int(h.Size) - int(nameLen) - 25; remain > 0 {
+		r.skip(remain)
+	}
+	nextSize, _ := r.readUint16()
+	readAllExtendedHeaders(r, h, nextSize)
+	if r.err != nil {
+		return nil, r.err
+	}
+	return h, nil
 }
 
 func readHeaderLv2(r *Reader) (*Header, error) {
