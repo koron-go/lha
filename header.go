@@ -26,6 +26,8 @@ type Header struct {
 	MinorVersion uint8
 	Dir          string
 
+	ExtendedHeaderSize uint64
+
 	DOS  HeaderDOS
 	UNIX HeaderUNIX
 }
@@ -276,6 +278,7 @@ func readExtendedHeader(r *Reader, h *Header, size uint16) (uint16, error) {
 	if remain > 0 {
 		r.skip(remain)
 	}
+	h.ExtendedHeaderSize += uint64(size)
 	return r.readUint16()
 }
 

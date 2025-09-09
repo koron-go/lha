@@ -1,7 +1,7 @@
 package lha
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 	"time"
@@ -32,7 +32,7 @@ func testExtractFile(t testing.TB, name string) []*entry {
 		if h == nil {
 			return entries
 		}
-		n, err := r.Decode(ioutil.Discard)
+		n, err := r.Decode(io.Discard)
 		entries = append(entries, &entry{
 			Header: h,
 			Size:   n,
@@ -116,6 +116,8 @@ func TestHeader_Lv1(t *testing.T) {
 				Level:      1,
 				OSID:       0x55,
 				Name:       "nullfile",
+
+				ExtendedHeaderSize: 19,
 				UNIX: HeaderUNIX{
 					Perm: 0100644,
 					GID:  100,
@@ -146,6 +148,8 @@ func TestHeader_Lv2(t *testing.T) {
 				OSID:      0x55,
 				Name:      "nullfile",
 				HeaderCRC: uint16p(0x9e7f),
+
+				ExtendedHeaderSize: 28,
 				UNIX: HeaderUNIX{
 					Perm: 0100644,
 					GID:  100,

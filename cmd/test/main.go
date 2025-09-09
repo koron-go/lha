@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,7 +13,7 @@ import (
 
 func extractTest(r *lha.Reader, h *lha.Header) error {
 	name := filepath.Join(h.Dir, h.Name)
-	n, err := r.Decode(ioutil.Discard)
+	n, err := r.Decode(io.Discard)
 	if err != nil {
 		return err
 	}

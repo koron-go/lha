@@ -81,16 +81,36 @@ func (r *Reader) NextHeader() (h *Header, err error) {
 	return h, nil
 }
 
-func (r *Reader) seekNext() error {
-	if r.curr != nil && r.curr.PackedSize > r.cnt {
-		remain := r.curr.PackedSize - r.cnt
-		r.curr = nil
-		// FIXME: consider 64bit length.
-		_, r.err = r.br.Discard(int(remain))
-		if r.err != nil {
-			return r.err
+func (r *Reader) remainToNext() int {
+	if r.curr == nil {
+		return 0
+	}
+	var remain uint64
+	switch r.curr.Level {
+	case 1:
+		if r.curr.PackedSize > r.cnt+r.curr.ExtendedHeaderSize {
+			remain = r.curr.PackedSize - r.cnt - r.curr.ExtendedHeaderSize
+		}
+	default:
+		if r.curr.PackedSize > r.cnt {
+			remain = r.curr.PackedSize - r.cnt
 		}
 	}
+	// FIXME: Consider the possibility of int overflow in a 32-bit env.
+	return int(remain)
+}
+
+// seekNext moves the cursor to the beginning of the next header.
+func (r *Reader) seekNext() error {
+	remain := r.remainToNext()
+	if remain <= 0 {
+		return nil
+	}
+	_, r.err = r.br.Discard(remain)
+	if r.err != nil {
+		return r.err
+	}
+	r.curr = nil
 	return nil
 }
 
