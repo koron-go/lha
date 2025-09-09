@@ -11,10 +11,10 @@ Currently supports only extracting LH5 format and Lv2 header.
 
 See below files:
 
-*   ./cmd/header/header.go
-*   ./cmd/extract/extract.go
+*   [./cmd/header/header.go](./cmd/header/header.go)
+*   [./cmd/extract/extract.go](./cmd/extract/extract.go)
 
 ## References
 
 *   [LHa for UNIX](https://github.com/jca02266/lha)
-*   [LHAの書庫構造](http://www2m.biglobe.ne.jp/~dolphin/lha/lha-header.htm)
+*   ~[LHAの書庫構造](http://www2m.biglobe.ne.jp/~dolphin/lha/lha-header.htm)~ Not longer exists
